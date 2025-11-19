@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Japan Delivery — Parcel Tracking</title>
+<!-- Leaflet CSS (CDN) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+/* full CSS from previous code */
+:root{
+    --bg:#f4f6f8; --card:#fff; --accent:#c62828; --muted:#6b7280;
+    --glass: rgba(255,255,255,0.7);
+}
+html,body{height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+body{background:linear-gradient(180deg,#f7fafc,#eef2f7); color:#111;}
+/* … rest of CSS … */
+</style>
+</head>
+<body>
+<!-- AUTH / TRACKING ENTRY -->
+<div id="authWrap">
+  <div class="card" role="main" aria-labelledby="title">
+    <div class="left">
+      <h1 id="title">Track your parcel</h1>
+      <p class="lead" id="subtitle">Enter your tracking number to view live progress & map.</p>
+      <label class="small" id="labelTracking">Tracking number</label>
+      <input id="trackingInput" type="text" inputmode="text" placeholder="EA778899001JP" autofocus>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button class="btn" id="btnTrack">Track</button>
+        <button class="btn ghost" id="btnDemo">Demo</button>
+      </div>
+      <div class="error" id="errorMsg">Invalid tracking number</div>
+      <div style="margin-top:18px;">
+        <strong>Secure:</strong> Only the generated tracking number will unlock this shipment.
+        <div class="muted" style="margin-top:8px;">Receiver: <strong id="receiverInfo">Hamabe Teruhiko</strong></div>
+        <div class="muted">Delivery type: <strong id="deliveryType">Miscellaneous Delivery</strong></div>
+      </div>
+    </div>
+    <div class="right">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="stamp">JP</div>
+          <div>
+            <div class="muted">Carrier</div>
+            <div class="k">Japan Delivery</div>
+          </div>
+        </div>
+        <div class="langToggle">
+          <button class="langBtn" id="btnEN">EN</button>
+          <button class="langBtn" id="btnJP">日本語</button>
+        </div>
+      </div>
+      <div style="margin-top:16px; color:var(--muted); font-size:13px;">
+        This demo is offline — map tiles use OpenStreetMap. No backend required.
+      </div>
+      <div style="margin-top:auto; display:flex; gap:8px;">
+        <div style="flex:1;">
+          <small class="muted">Quick help</small>
+          <div style="font-size:13px; margin-top:6px;" class="muted">Enter <strong>EA778899001JP</strong> to unlock.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- APP (hidden until auth) -->
+<div id="app">
+  <div class="topbar">
+    <div class="infoBlock">
+      <div class="stamp">JP</div>
+      <div class="meta">
+        <small id="labelTN">Tracking Number</small>
+        <strong id="showTN">EA778899001JP</strong>
+      </div>
+      <div style="width:1px; height:26px; background:#eef2f6; margin:0 12px;"></div>
+      <div class="meta">
+        <small id="labelReceiver">Receiver</small>
+        <strong id="showReceiver">Hamabe Teruhiko</strong>
+      </div>
+      <div style="width:1px; height:26px; background:#eef2f6; margin:0 12px;"></div>
+      <div class="meta">
+        <small id="labelType">Delivery Type</small>
+        <strong id="showType">Miscellaneous Delivery</strong>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="muted" id="etaText">ETA: —</div>
+      <div style="width:10px;"></div>
+      <button class="btn ghost" id="btnCopy">Copy</button>
+      <button class="btn" id="btnSignOut">Sign out</button>
+    </div>
+  </div>
+  <div class="content">
+    <div>
+      <div class="panel">
+        <strong id="timelineTitle">Shipment Timeline</strong>
+        <div class="timeline" id="timeline"></div>
+        <div style="margin-top:12px;">
+          <div class="progressbar"><div class="progress" id="progressBar"></div></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:12px;">
+        <strong id="historyTitle">Shipment History</strong>
+        <div class="history" id="historyList"></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel" style="padding:0; overflow:hidden;">
+        <div id="mapWrap">
+          <div id="map"></div>
+          <div class="loaderOverlay" id="mapLoader" style="display:flex;">
+            <div class="spinner">
+              <div class="dots" aria-hidden="true">
+                <div class="dotPulse"></div>
+                <div class="dotPulse"></div>
+                <div class="dotPulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <small class="muted">Started</small>
+            <div id="startTime">—</div>
+          </div>
+          <div>
+            <small class="muted">Estimated delivery</small>
+            <div id="endTime">—</div>
+          </div>
+          <div style="min-width:160px;">
+            <small class="muted">Countdown</small>
+            <div id="countdown">—</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="btn" id="btnFast">Fast demo (2m)</button>
+        <button class="btn ghost" id="btnReset">Reset 48h</button>
+        <button class="btn ghost" id="btnCenter">Center map</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* full JS logic from previous code */
+</script>
+</body>
+</html>
